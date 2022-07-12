@@ -69,6 +69,9 @@ tweets$hashtags
 ## to each row individually.
 rowwise(tweets) %>% filter("DataMatters" %in% hashtags) %>% ungroup()
 
+## The hashtags may sometimes be empty even when there are hashtags. We'll see another way
+## to access hashtags in a later exercise.
+
 ## For many projects, you'll only want original tweets, not retweets. We can easily
 ## filter these.
 original_tweets = filter(tweets, !is_retweet)
@@ -147,9 +150,7 @@ saved = read_csv("test.csv", col_types=cols(
 
 ## Multiple users
 ## get_timeline can also retrieve tweets for multiple users. In this case, the n= parameter will apply per user.
-## It's a good idea to set retryonratelimit=T so that rtweet will automatically wait if you hit your rate limits
-## for the Twitter API.
-tweets = get_timeline(c("Odum_Institute", "UNCLibrary"), n=100, retryonratelimit=T)
+tweets = get_timeline(c("Odum_Institute", "UNCLibrary"), n=100)
 View(tweets)
 
 ## Updating tweets from multiple users
@@ -163,10 +164,10 @@ View(tweets)
 tweets_to_update = filter(tweets, created_at < quantile(created_at, 0.75))
 
 per_user_since_id = group_by(tweets_to_update, user_id) %>% summarize(since_id=as.character(max(as.integer64((status_id)))))
-View(per_user_since_id)
+per_user_since_id
 
 ## now we can run get_timeline for each user separately
-## We split the dataframe into one dataframe per user, and then use map_dfr to download
+## We split the per_user_since_id dataframe into one dataframe per user, and then use map_dfr to download
 ## each user's tweets
 new_tweets = split(per_user_since_id, 1:nrow(per_user_since_id)) %>%
   map_dfr(function (row) {
